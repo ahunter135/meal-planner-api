@@ -26,7 +26,7 @@ const blacklist = [
 ];
 let db = mongo.getDb();
 let collection;
-
+let offline = true;
 db.then((db) => {
   collection = db.collection("collection");
 });
@@ -69,9 +69,11 @@ app.get("/currentBalance", async function (req, res) {
   res.send(current_bal);
 });
 app.post("/", async function (req, res) {
+  if (offline) {
+    return res.status(400).send("Faucet is Offline");
+  }
   let errors = false;
   let address = req.body["addr"];
-  let given = false;
   let amount = Math.floor(Math.random() * 8) / 100 + 0.01;
   let current_bal = await banano.check_bal(faucet_addr);
   if (Number(current_bal) > 100) {
