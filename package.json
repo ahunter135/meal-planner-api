@@ -1,0 +1,31 @@
+{
+  "name": "banano-server",
+  "version": "1.0.0",
+  "description": "server for banano",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ahunter135/banano-server.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ahunter135/banano-server/issues"
+  },
+  "homepage": "https://github.com/ahunter135/banano-server#readme",
+  "dependencies": {
+    "axios": "^0.24.0",
+    "bananojs": "npm:@bananocoin/bananojs@^2.4.24",
+    "body-parser": "^1.19.0",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "mongo": "^0.1.0",
+    "nunjucks": "^3.2.3"
+  }
+}
