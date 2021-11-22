@@ -69,7 +69,7 @@ app.get("/currentBalance", async function (req, res) {
   res.send(current_bal);
 });
 app.post("/", async function (req, res) {
-  if (offline) {
+  if (process.env.OFFLINE) {
     return res.status(400).send("Faucet is Offline");
   }
   let errors = false;
