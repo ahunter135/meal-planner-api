@@ -205,7 +205,7 @@ app.post("/", async function (req, res) {
   */
 });
 
-app.listen(8081, () => {
+app.listen(process.env.PORT || 5000, () => {
   banano.receive_deposits();
 
   console.log(`App on`);
