@@ -86,4 +86,5 @@ module.exports = {
   is_unopened: is_unopened,
   get_account_history: get_account_history,
   is_valid: is_valid,
+  bananojs: bananojs,
 };

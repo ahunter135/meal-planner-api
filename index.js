@@ -12,7 +12,7 @@ const bodyParser = require("body-parser");
 
 const mongo = require("./database.js");
 const banano = require("./banano.js");
-
+const dayjs = require("dayjs");
 const crypto = require("crypto");
 require("dotenv").config();
 const blacklist = [
@@ -64,9 +64,11 @@ setInterval(clearCache, claim_freq * 1.3);
 
 const faucet_addr = process.env.BANADDR;
 
+app.get("/currentBalance", async function (req, res) {
+  let current_bal = await banano.check_bal(faucet_addr);
+  res.send(current_bal);
+});
 app.post("/", async function (req, res) {
-  console.log(req.body["addr"]);
-
   let errors = false;
   let address = req.body["addr"];
   let given = false;
@@ -93,7 +95,6 @@ app.post("/", async function (req, res) {
     banano.address_related_to_blacklist(account_history, blacklist) ||
     blacklist.includes(address)
   ) {
-    console.log(address);
     errors =
       "This address is blacklisted because it is cheating and farming faucets (or sent money to an address participating in cheating and farming). If you think this is a mistake message me (u/prussia_dev) on reddit. If you are a legitimate user impacted by this, please use a different address or try again.";
     return res.status(401).send(errors);
@@ -110,99 +111,28 @@ app.post("/", async function (req, res) {
     return res.status(401).send(errors);
   }
 
+  let db_result = await find(address);
+  let found = false;
+  if (db_result) {
+    let today = dayjs();
+    let entryDate = dayjs(db_result.value);
+    let diff = today.diff(entryDate, "hour");
+    if (diff < 24) {
+      return res.status(400).send("Request too soon");
+    }
+    found = true;
+  }
+
   send = await banano.send_banano(address, amount);
+
   if (!send) {
     return res.status(401).send("Invalid Address");
   }
+
+  if (!found) await insert(address, dayjs().toISOString());
+  else await replace(address, dayjs().toISOString());
+
   return res.status(200).send("Success");
-  /*
-  if (captcha_resp["success"] && !dry) {
-    //check cookie
-    if (req.cookies["last_claim"]) {
-      if (Number(req.cookies["last_claim"]) + claim_freq < Date.now()) {
-        //let db_result = await db.get(address);
-        let db_result = await find(address);
-        if (db_result) {
-          db_result = db_result["value"];
-          if (Number(db_result) + claim_freq < Date.now()) {
-            //all clear, send bananos!
-            send = await banano.send_banano(address, amount);
-            if (send == false) {
-              errors = "Send failed";
-            } else {
-              res.cookie("last_claim", String(Date.now()));
-              //await db.set(address,String(Date.now()));
-              await replace(address, String(Date.now()));
-              given = true;
-            }
-          } else {
-            errors = "Last claim too soon";
-          }
-        } else {
-          //all clear, send bananos!
-          send = await banano.send_banano(address, amount);
-          if (send == false) {
-            errors = "Send failed";
-          } else {
-            res.cookie("last_claim", String(Date.now()));
-            //await db.set(address,String(Date.now()));
-            await insert(address, String(Date.now()));
-            given = true;
-          }
-        }
-      } else {
-        //add errors
-        errors = "Last claim too soon";
-      }
-    } else {
-      //check db
-      //let db_result = await db.get(address);
-      let db_result = await find(address);
-      if (db_result) {
-        db_result = db_result["value"];
-        if (Number(db_result) + claim_freq < Date.now()) {
-          //all clear, send bananos!
-          send = await banano.send_banano(address, amount);
-          if (send == false) {
-            errors = "Invalid address";
-          } else {
-            res.cookie("last_claim", String(Date.now()));
-            //await db.set(address,String(Date.now()));
-            await replace(address, String(Date.now()));
-            given = true;
-          }
-        } else {
-          errors = "Last claim too soon";
-        }
-      } else {
-        //all clear, send bananos!
-        send = await banano.send_banano(address, amount);
-        if (send == false) {
-          errors = "Invalid address";
-        } else {
-          res.cookie("last_claim", String(Date.now()));
-          //await db.set(address,String(Date.now()));
-          await insert(address, String(Date.now()));
-          given = true;
-        }
-      }
-    }
-  } else {
-    errors = "captcha incorrect or faucet dry";
-  }
-  
-  return res.send(
-    nunjucks.render("index.html", {
-      errors: errors,
-      address: address,
-      given: given,
-      amount: amount,
-      current_bal: String(current_bal),
-      on_break: on_break,
-      faucet_addr: faucet_addr,
-    })
-  );
-  */
 });
 
 app.listen(process.env.PORT || 5000, () => {
