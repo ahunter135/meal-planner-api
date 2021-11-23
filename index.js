@@ -15,6 +15,10 @@ const banano = require("./banano.js");
 const dayjs = require("dayjs");
 const crypto = require("crypto");
 require("dotenv").config();
+
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const client = require("twilio")(accountSid, authToken);
 const blacklist = [
   "ban_3qyp5xjybqr1go8xb1847tr6e1ujjxdrc4fegt1rzhmcmbtntio385n35nju",
   "ban_1yozd3rq15fq9eazs91edxajz75yndyt5bpds1xspqfjoor9bdc1saqrph1w",
@@ -69,12 +73,24 @@ app.get("/currentBalance", async function (req, res) {
   res.send(current_bal);
 });
 app.post("/", async function (req, res) {
-  console.log(process.env.OFFLINE);
   if (process.env.OFFLINE === "true") {
     return res.status(400).send("Faucet is Offline");
   }
   let errors = false;
+  let phone = req.body["phone"];
   let address = req.body["addr"];
+  processBan(phone, address, res);
+});
+
+async function sendPhoneVerification(phone) {
+  let verification = await client.verify
+    .services("VA3c726d3c0fe3ea181888fd514dbf4960")
+    .verifications.create({ to: phone, channel: "sms" });
+
+  return verification;
+}
+
+async function processBan(phone, address, res) {
   let amount = Math.floor(Math.random() * 8) / 100 + 0.01;
   let current_bal = await banano.check_bal(faucet_addr);
   if (Number(current_bal) > 100) {
@@ -115,15 +131,33 @@ app.post("/", async function (req, res) {
   }
 
   let db_result = await find(address);
-  let found = false;
   if (db_result) {
     let today = dayjs();
-    let entryDate = dayjs(db_result.value);
+    let entryDate = dayjs(db_result.value.date);
     let diff = today.diff(entryDate, "hour");
+    console.log(db_result);
     if (diff < 24) {
       return res.status(400).send("Request too soon");
     }
-    found = true;
+    if (!db_result.value.verified || phone !== db_result.value.phone) {
+      //Phone is not verified, send verification now.
+      await sendPhoneVerification(phone);
+      await replace(address, {
+        date: db_result.value.date,
+        phone: phone,
+        verified: false,
+      });
+      return res.status(401).send("Please verify your phone number.");
+    }
+  } else {
+    // Initial attempt, verifiy phone
+    await sendPhoneVerification(phone);
+    await insert(address, {
+      date: dayjs().subtract(25, "hours").toISOString(),
+      phone: phone,
+      verified: false,
+    });
+    return res.status(401).send("Please verify your phone number.");
   }
 
   send = await banano.send_banano(address, amount);
@@ -131,11 +165,35 @@ app.post("/", async function (req, res) {
   if (!send) {
     return res.status(401).send("Invalid Address");
   }
-
-  if (!found) await insert(address, dayjs().toISOString());
-  else await replace(address, dayjs().toISOString());
+  await replace(address, {
+    date: dayjs().toISOString(),
+    phone: phone,
+    verified: true,
+  });
 
   return res.status(200).send("Success");
+}
+
+app.post("/verifyPhone", async function (req, res) {
+  let verification = req.body["code"];
+  let phone = req.body["phone"];
+  let address = req.body["addr"];
+  console.log("verifying");
+  let verificationCheck = await client.verify
+    .services("VA3c726d3c0fe3ea181888fd514dbf4960")
+    .verificationChecks.create({ to: phone, code: verification });
+
+  if (verificationCheck.status === "approved" && verificationCheck.valid) {
+    //Good to go. Send the BAN!
+    replace(address, {
+      date: dayjs().subtract(25, "hours").toISOString(),
+      phone: phone,
+      verified: true,
+    });
+    processBan(phone, address, res);
+  } else {
+    res.status(401).send("Code was invalid.");
+  }
 });
 
 app.listen(process.env.PORT || 5000, () => {
