@@ -213,7 +213,7 @@ app.post("/createAccount", async function (req, res) {
   }
   insert(address, {
     password: password,
-    accountBalance: 2,
+    accountBalance: 1,
   });
 
   res.send("Account Created");
@@ -347,7 +347,7 @@ app.post("/withdraw", async function (req, res) {
         password: db_result.value.password,
         accountBalance: 0,
       });
-      res.send("Success");
+      res.status(200).send("Success");
     }
   } else {
     res.status(401).send("Something went wrong");
