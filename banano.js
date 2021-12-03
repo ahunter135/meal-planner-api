@@ -56,25 +56,22 @@ async function is_unopened(address) {
 }
 
 async function receive_deposits() {
-  let rep = await bananojs.getAccountInfo(
-    await bananojs.getBananoAccountFromSeed(process.env.SEED, 0),
-    true
+  const privateKey = await bananojs.getPrivateKey(process.env.SEED, 0);
+  const publicKey = await bananojs.getPublicKey(privateKey);
+  const account = bananojs.getBananoAccount(publicKey);
+  return await bananojs.receiveBananoDepositsForSeed(
+    process.env.SEED,
+    0,
+    account
   );
-  rep = rep.representative;
-  if (!rep) {
-    //set self as rep if no other set rep
-    await bananojs.receiveBananoDepositsForSeed(
-      process.env.SEED,
-      0,
-      await bananojs.getBananoAccountFromSeed(process.env.SEED, 0)
-    );
-    return;
-  }
-  await bananojs.receiveBananoDepositsForSeed(process.env.SEED, 0, rep);
 }
 
 async function is_valid(address) {
   return await bananojs.getBananoAccountValidationInfo(address).valid;
+}
+
+async function convertRawToDecimal(amount) {
+  return await bananojs.getBananoPartsAsDecimal(amount);
 }
 
 module.exports = {
@@ -86,5 +83,6 @@ module.exports = {
   is_unopened: is_unopened,
   get_account_history: get_account_history,
   is_valid: is_valid,
+  convertRawToDecimal: convertRawToDecimal,
   bananojs: bananojs,
 };

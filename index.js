@@ -2,7 +2,7 @@ const express = require("express");
 const axios = require("axios");
 const nunjucks = require("nunjucks");
 const cors = require("cors");
-
+const _ = require("lodash");
 //const Database = require("@replit/database");
 
 //const db = new Database();
@@ -14,6 +14,7 @@ const mongo = require("./database.js");
 const banano = require("./banano.js");
 const dayjs = require("dayjs");
 const crypto = require("crypto");
+const { bananojs } = require("./banano.js");
 require("dotenv").config();
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
@@ -73,6 +74,8 @@ app.get("/currentBalance", async function (req, res) {
   res.send(current_bal);
 });
 app.post("/", async function (req, res) {
+  db = await db;
+  collection = db.collection("collection");
   if (process.env.OFFLINE === "true") {
     return res.status(400).send("Faucet is Offline");
   }
@@ -135,7 +138,7 @@ async function processBan(phone, address, res) {
     let today = dayjs();
     let entryDate = dayjs(db_result.value.date);
     let diff = today.diff(entryDate, "hour");
-    console.log(db_result);
+
     if (diff < 24) {
       return res.status(400).send("Request too soon");
     }
@@ -178,7 +181,7 @@ app.post("/verifyPhone", async function (req, res) {
   let verification = req.body["code"];
   let phone = req.body["phone"];
   let address = req.body["addr"];
-  console.log("verifying");
+
   let verificationCheck = await client.verify
     .services("VA3c726d3c0fe3ea181888fd514dbf4960")
     .verificationChecks.create({ to: phone, code: verification });
@@ -196,8 +199,128 @@ app.post("/verifyPhone", async function (req, res) {
   }
 });
 
-app.listen(process.env.PORT || 5000, () => {
-  banano.receive_deposits();
+app.post("/createAccount", async function (req, res) {
+  let address = req.body["address"];
+  let password = req.body["password"];
 
+  db = await db;
+  collection = db.collection("banano_trivia");
+  insert(address, {
+    password: password,
+    accountBalance: 2,
+  });
+
+  res.send("Account Created");
+});
+
+app.post("/login", async function (req, res) {
+  let address = req.body["address"];
+  let password = req.body["password"];
+  db = await db;
+  collection = db.collection("banano_trivia");
+  let db_result = await find(address);
+  if (db_result) {
+    if (db_result.value.password === password) {
+      res.send(db_result);
+    } else {
+      res.status(401).send("Incorrect Password");
+    }
+  }
+});
+app.get("/accountBalance", async function (req, res) {
+  db = await db;
+  collection = db.collection("banano_trivia");
+  let address = req.query.address;
+  let db_result = await find(address);
+
+  res.send(JSON.stringify(db_result.value.accountBalance));
+});
+
+app.get("/checkForDeposit", async function (req, res) {
+  db = await db;
+  collection = db.collection("banano_trivia");
+  await banano.receive_deposits();
+  let address = req.query.address;
+  let account_history = await banano.get_account_history(process.env.BANADDR);
+  let addressHistory = _.find(account_history.history, (a) => {
+    let now = dayjs();
+    let timestamp = dayjs.unix(a.local_timestamp);
+    return (
+      a.type === "receive" &&
+      a.account === address &&
+      now.diff(timestamp, "seconds") < 60
+    );
+  });
+  if (addressHistory) {
+    let db_result = await find(address);
+    let accountBalance =
+      parseInt(db_result.value.accountBalance) +
+      parseInt(addressHistory.amount) / 100000000000000000000000000000;
+
+    await replace(address, {
+      password: db_result.value.password,
+      accountBalance: accountBalance,
+    });
+
+    res.send({
+      status: true,
+    });
+  } else {
+    res.send({ status: false });
+  }
+});
+app.post("/addToBalance", async function (req, res) {
+  db = await db;
+  collection = db.collection("banano_trivia");
+  await banano.receive_deposits();
+  let address = req.body["address"];
+  let betAmount = req.body["bet"];
+
+  let db_result = await find(address);
+
+  if (db_result) {
+    let balance = db_result.value.accountBalance + betAmount;
+
+    await replace(address, {
+      password: db_result.value.password,
+      accountBalance: balance,
+    });
+
+    return res.send({
+      status: true,
+    });
+  } else {
+    return res.status(500).send({ status: false });
+  }
+});
+app.post("/deductBalance", async function (req, res) {
+  db = await db;
+  collection = db.collection("banano_trivia");
+  await banano.receive_deposits();
+  let address = req.body["address"];
+  let betAmount = req.body["bet"];
+
+  let db_result = await find(address);
+
+  if (db_result) {
+    let balance = db_result.value.accountBalance - betAmount;
+
+    if (balance < 0) {
+      return res.status(400).send("Insufficient Balance");
+    }
+    await replace(address, {
+      password: db_result.value.password,
+      accountBalance: balance,
+    });
+
+    return res.send({
+      status: true,
+    });
+  } else {
+    return res.status(500).send({ status: false });
+  }
+});
+
+app.listen(process.env.PORT || 5000, async () => {
   console.log(`App on`);
 });
