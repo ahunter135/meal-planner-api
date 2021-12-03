@@ -340,8 +340,14 @@ app.post("/withdraw", async function (req, res) {
     if (!send) {
       return res.status(401).send("Invalid Address");
     } else {
+      await replace(address, {
+        password: db_result.value.password,
+        accountBalance: 0,
+      });
       res.send("Success");
     }
+  } else {
+    res.status(401).send("Something went wrong");
   }
 });
 
