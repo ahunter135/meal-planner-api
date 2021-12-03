@@ -205,6 +205,12 @@ app.post("/createAccount", async function (req, res) {
 
   db = await db;
   collection = db.collection("banano_trivia");
+
+  let db_result = await find(address);
+
+  if (db_result) {
+    return res.status(401).send("Account Already Exists");
+  }
   insert(address, {
     password: password,
     accountBalance: 2,
