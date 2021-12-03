@@ -327,6 +327,24 @@ app.post("/deductBalance", async function (req, res) {
   }
 });
 
+app.post("/withdraw", async function (req, res) {
+  db = await db;
+  collection = db.collection("banano_trivia");
+  await banano.receive_deposits();
+  let address = req.body["address"];
+  let db_result = await find(address);
+
+  if (db_result) {
+    send = await banano.send_banano(address, db_result.value.accountBalance);
+
+    if (!send) {
+      return res.status(401).send("Invalid Address");
+    } else {
+      res.send("Success");
+    }
+  }
+});
+
 app.listen(process.env.PORT || 5000, async () => {
   console.log(`App on`);
 });
