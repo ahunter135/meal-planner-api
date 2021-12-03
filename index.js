@@ -335,6 +335,9 @@ app.post("/withdraw", async function (req, res) {
   let db_result = await find(address);
 
   if (db_result) {
+    if (db_result.value.accountBalance === 0)
+      return res.status(400).send("Zero Balance");
+
     send = await banano.send_banano(address, db_result.value.accountBalance);
 
     if (!send) {
