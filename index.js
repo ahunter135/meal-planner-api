@@ -473,7 +473,7 @@ Room.prototype.timerFunction = function () {
 };
 
 Room.prototype.emitQuestion = async function () {
-  if (this.currentQuestionIndex == this.questions.length) {
+  if (this.currentQuestionIndex + 1 == this.questions.length) {
     clearInterval(this.timer);
     db = await db;
     collection = db.collection("banano_trivia");
