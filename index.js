@@ -366,7 +366,7 @@ app.get("/playerCount", async function (req, res) {
   return res.send(JSON.stringify(onlinePlayers));
 });
 
-const http = require("http").Server(app);
+const http = require("http").createServer(app);
 
 app.listen(process.env.PORT || 5000, async () => {
   console.log(`App on`);
@@ -375,7 +375,7 @@ app.listen(process.env.PORT || 5000, async () => {
 /**
  * Start IO Stuff
  */
-const io = socketIO(app);
+const io = socketIO().listen(http);
 
 io.on("connection", (socket) => {
   onlinePlayers++;
