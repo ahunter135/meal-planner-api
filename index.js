@@ -375,15 +375,8 @@ app.listen(process.env.PORT || 5000, async () => {
 /**
  * Start IO Stuff
  */
-const io = require("socket.io")(http, {
-  cors: {
-    origin: "https://banano-trivia.web.app/",
-    methods: ["GET", "POST"],
-  },
-});
-http.listen(process.env.SOCKETPORT || 5001, async () => {
-  console.log("Socket Open");
-});
+const io = new Server(http);
+
 io.on("connection", (socket) => {
   onlinePlayers++;
 
