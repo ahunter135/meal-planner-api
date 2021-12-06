@@ -397,7 +397,7 @@ io.on("connection", (socket) => {
     });
     socket.join("waiting room");
     lookingForLobby.push({ id: socket.id, address: id });
-    connectTwoUsers(id);
+    connectTwoUsers();
   });
 
   socket.on("leave waiting room", async () => {
@@ -524,7 +524,7 @@ Room.prototype.emitQuestion = async function () {
   }
 };
 
-async function connectTwoUsers(address) {
+async function connectTwoUsers() {
   if (lookingForLobby.length >= 2) {
     for (var i = 0; i < lookingForLobby.length; i++) {
       let user1 = lookingForLobby.shift();
@@ -560,3 +560,7 @@ async function connectTwoUsers(address) {
     }
   }
 }
+
+setInterval(() => {
+  connectTwoUsers();
+}, 24000);
