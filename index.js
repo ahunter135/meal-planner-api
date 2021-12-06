@@ -15,7 +15,7 @@ const banano = require("./banano.js");
 const dayjs = require("dayjs");
 const crypto = require("crypto");
 const { bananojs } = require("./banano.js");
-const { Server } = require("socket.io");
+const socketIO = require("socket.io");
 
 const { v4: uuidv4 } = require("uuid");
 require("dotenv").config();
