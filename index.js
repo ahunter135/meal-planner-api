@@ -560,8 +560,7 @@ async function connectTwoUsers() {
     }
   }
 }
-/*
+
 setInterval(() => {
   connectTwoUsers();
 }, 24000);
-*/
