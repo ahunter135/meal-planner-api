@@ -401,12 +401,14 @@ io.on("connection", (socket) => {
   });
 
   socket.on("leave waiting room", async () => {
-    let user = _.findIndex(lookingForLobby, (l) => {
+    let user = _.find(lookingForLobby, (l) => {
+      return socket.id === l.id;
+    });
+    let userIndex = _.findIndex(lookingForLobby, (l) => {
       return socket.id === l.id;
     });
 
-    console.log(user.address);
-    lookingForLobby.splice(user, 1);
+    lookingForLobby.splice(userIndex, 1);
 
     db = await db;
     collection = db.collection("banano_trivia");
