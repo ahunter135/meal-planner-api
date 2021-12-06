@@ -473,7 +473,7 @@ Room.prototype.timerFunction = function () {
 };
 
 Room.prototype.emitQuestion = async function () {
-  if (this.currentQuestionIndex + 1 == this.questions.length) {
+  if (this.currentQuestionIndex == this.questions.length) {
     clearInterval(this.timer);
     db = await db;
     collection = db.collection("banano_trivia");
@@ -514,6 +514,11 @@ Room.prototype.emitQuestion = async function () {
         });
       }
     }
+
+    let lobbyIndex = _.findIndex(lobbies, (l) => {
+      return this.id === l.id;
+    });
+    lobbies.splice(lobbyIndex, 1);
 
     io.to(this.id).emit("game over", this.players);
   } else {
