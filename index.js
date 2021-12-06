@@ -518,7 +518,6 @@ Room.prototype.emitQuestion = async function () {
     let lobbyIndex = _.findIndex(lobbies, (l) => {
       return this.id === l.id;
     });
-    lobbies.splice(lobbyIndex, 1);
 
     io.to(this.id).emit("game over", this.players);
   } else {
@@ -568,7 +567,8 @@ async function connectTwoUsers() {
     }
   }
 }
-
+/*
 setInterval(() => {
   connectTwoUsers();
 }, 24000);
+*/
