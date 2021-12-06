@@ -377,7 +377,7 @@ app.listen(process.env.PORT || 5000, async () => {
  */
 const io = require("socket.io")(http, {
   cors: {
-    origin: "http://localhost:8102",
+    origin: "https://banano-trivia.web.app/",
     methods: ["GET", "POST"],
   },
 });
