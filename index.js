@@ -367,11 +367,11 @@ app.get("/playerCount", async function (req, res) {
 });
 
 const http = require("http").Server(app);
-
+/*
 app.listen(process.env.PORT || 5000, async () => {
   console.log(`App on`);
 });
-
+*/
 /**
  * Start IO Stuff
  */
@@ -381,7 +381,7 @@ const io = require("socket.io")(http, {
     methods: ["GET", "POST"],
   },
 });
-http.listen(process.env.SOCKETPORT || 5000, async () => {
+http.listen(process.env.PORT || 5000, async () => {
   console.log("Socket Open");
 });
 io.on("connection", (socket) => {
