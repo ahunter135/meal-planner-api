@@ -87,7 +87,7 @@ app.post("/", async function (req, res) {
 
 async function sendPhoneVerification(phone) {
   let verification = await client.verify
-    .services("VA3c726d3c0fe3ea181888fd514dbf4960")
+    .services("VAf2fba9dbee512d79390fbc66d2885648")
     .verifications.create({ to: phone, channel: "sms" });
 
   return verification;
