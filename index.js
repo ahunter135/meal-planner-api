@@ -388,7 +388,7 @@ io.on("connection", (socket) => {
   onlinePlayers++;
 
   socket.on("disconnect", () => {
-    onlinePlayers--;
+    if (onlinePlayers > 0) onlinePlayers--;
   });
 
   socket.on("looking for game", (id) => {
