@@ -15,6 +15,9 @@ const banano = require("./banano.js");
 const dayjs = require("dayjs");
 const crypto = require("crypto");
 const { bananojs } = require("./banano.js");
+const { Server } = require("socket.io");
+
+const { v4: uuidv4 } = require("uuid");
 require("dotenv").config();
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
@@ -32,6 +35,10 @@ const blacklist = [
 let db = mongo.getDb();
 let collection;
 let offline = true;
+let onlinePlayers = 0;
+
+let lookingForLobby = [];
+let lobbies = [];
 db.then((db) => {
   collection = db.collection("collection");
 });
@@ -55,6 +62,7 @@ async function count(query) {
   return await collection.count(query);
 }
 const app = express();
+
 app.use(cors());
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -306,6 +314,8 @@ app.post("/deductBalance", async function (req, res) {
   let address = req.body["address"];
   let betAmount = req.body["bet"];
 
+  console.log(address);
+  console.log(betAmount);
   let db_result = await find(address);
 
   if (db_result) {
@@ -326,7 +336,6 @@ app.post("/deductBalance", async function (req, res) {
     return res.status(500).send({ status: false });
   }
 });
-
 app.post("/withdraw", async function (req, res) {
   db = await db;
   collection = db.collection("banano_trivia");
@@ -353,7 +362,183 @@ app.post("/withdraw", async function (req, res) {
     res.status(401).send("Something went wrong");
   }
 });
+app.get("/playerCount", async function (req, res) {
+  return res.send(JSON.stringify(onlinePlayers));
+});
+
+const http = require("http").Server(app);
 
 app.listen(process.env.PORT || 5000, async () => {
   console.log(`App on`);
 });
+
+/**
+ * Start IO Stuff
+ */
+const io = require("socket.io")(http, {
+  cors: {
+    origin: "http://localhost:8102",
+    methods: ["GET", "POST"],
+  },
+});
+http.listen(process.env.SOCKETPORT || 5001, async () => {
+  console.log("Socket Open");
+});
+io.on("connection", (socket) => {
+  onlinePlayers++;
+
+  socket.on("disconnect", () => {
+    onlinePlayers--;
+  });
+
+  socket.on("looking for game", (id) => {
+    socket.join("waiting room");
+    lookingForLobby.push({ id: socket.id, address: id });
+    connectTwoUsers(id);
+  });
+
+  socket.on("leave waiting room", () => {
+    socket.leave("waiting room");
+  });
+
+  socket.on("leave room", (data) => {
+    socket.leave(data);
+  });
+
+  socket.on("answered question", (data) => {
+    let usedRoomIndex = _.findIndex(lobbies, (r) => {
+      return r.id === data.room;
+    });
+
+    let answer = data.answer;
+    let user = socket.id;
+    let roomUserIndex = _.findIndex(lobbies[usedRoomIndex].players, (p) => {
+      return p.socket === user;
+    });
+    if (lobbies[usedRoomIndex].currentQuestion.correct_answer === answer) {
+      lobbies[usedRoomIndex].players[roomUserIndex].score++;
+    }
+
+    lobbies[usedRoomIndex].players[roomUserIndex].answered = true;
+  });
+});
+
+var Room = function (id, questions) {
+  this.id = "game" + id;
+  this.timeRemaining = 5;
+  this.questions = questions;
+  this.timer = setInterval(this.timerFunction.bind(this), 1000);
+  this.currentQuestionIndex = 0;
+  this.currentQuestion = this.questions[this.currentQuestionIndex];
+  this.players = [];
+  this.emitQuestion = this.emitQuestion.bind(this);
+  return this;
+};
+
+Room.prototype.timerFunction = function () {
+  if (!this.players[0].answered || !this.players[1].answered) {
+    this.timeRemaining--;
+  } else if (this.players[0].answered && this.players[1].answered) {
+    this.timeRemaining = 0;
+  }
+
+  if (this.timeRemaining === 0) {
+    this.players[0].answered = false;
+    this.players[1].answered = false;
+    this.timeRemaining = 20;
+    this.emitQuestion();
+  }
+  io.to(this.id).emit("counter", this.timeRemaining);
+};
+
+Room.prototype.emitQuestion = async function () {
+  if (this.currentQuestionIndex + 1 == this.questions.length) {
+    clearInterval(this.timer);
+    db = await db;
+    collection = db.collection("banano_trivia");
+    await banano.receive_deposits();
+    if (this.players[0].score > this.players[1].score) {
+      let db_result = await find(this.players[0].id);
+
+      if (db_result) {
+        await replace(this.players[0].id, {
+          password: db_result.value.password,
+          accountBalance: db_result.value.accountBalance + 0.4,
+        });
+      }
+    } else if (this.players[1].score > this.players[0].score) {
+      let db_result = await find(this.players[1].id);
+
+      if (db_result) {
+        await replace(this.players[1].id, {
+          password: db_result.value.password,
+          accountBalance: db_result.value.accountBalance + 0.4,
+        });
+      }
+    } else if (this.players[0].score === this.players[1].score) {
+      let db_result = await find(this.players[0].id);
+
+      if (db_result) {
+        await replace(this.players[0].id, {
+          password: db_result.value.password,
+          accountBalance: db_result.value.accountBalance + 0.2,
+        });
+      }
+      db_result = await find(this.players[1].id);
+
+      if (db_result) {
+        await replace(this.players[1].id, {
+          password: db_result.value.password,
+          accountBalance: db_result.value.accountBalance + 0.2,
+        });
+      }
+    }
+
+    io.to(this.id).emit("game over", this.players);
+  } else {
+    this.currentQuestionIndex++;
+    this.currentQuestion = this.questions[this.currentQuestionIndex];
+
+    io.to(this.id).emit("new question", {
+      question: this.currentQuestion,
+      players: this.players,
+    });
+  }
+};
+
+async function connectTwoUsers(address) {
+  if (lookingForLobby.length >= 2) {
+    for (var i = 0; i < lookingForLobby.length; i++) {
+      let user1 = lookingForLobby.shift();
+      let user2 = lookingForLobby.shift();
+      var gameId = uuidv4();
+
+      let socketUser1 = io.sockets.sockets.get(user1.id);
+      socketUser1.leave("waiting room");
+
+      let socketUser2 = io.sockets.sockets.get(user2.id);
+      socketUser2.leave("waiting room");
+
+      socketUser1.join("game" + gameId);
+      socketUser2.join("game" + gameId);
+
+      const response = await axios.get(
+        "https://opentdb.com/api.php?amount=5&difficulty=easy"
+      );
+
+      let room = new Room(gameId, response.data.results);
+      io.to(room.id).emit("joined room", {
+        id: room.id,
+        players: [
+          { id: user1.address, score: 0, answered: false, socket: user1.id },
+          { id: user2.address, score: 0, answered: false, socket: user2.id },
+        ],
+      });
+      room.players = [
+        { id: user1.address, score: 0, answered: false, socket: user1.id },
+        { id: user2.address, score: 0, answered: false, socket: user2.id },
+      ];
+      lobbies.push(room);
+    }
+  }
+}
