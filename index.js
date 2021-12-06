@@ -15,7 +15,7 @@ const banano = require("./banano.js");
 const dayjs = require("dayjs");
 const crypto = require("crypto");
 const { bananojs } = require("./banano.js");
-const socketIO = require("socket.io");
+const { Server } = require("socket.io");
 
 const { v4: uuidv4 } = require("uuid");
 require("dotenv").config();
@@ -366,7 +366,7 @@ app.get("/playerCount", async function (req, res) {
   return res.send(JSON.stringify(onlinePlayers));
 });
 
-const http = require("http").createServer(app);
+const http = require("http").Server(app);
 
 app.listen(process.env.PORT || 5000, async () => {
   console.log(`App on`);
@@ -375,8 +375,15 @@ app.listen(process.env.PORT || 5000, async () => {
 /**
  * Start IO Stuff
  */
-const io = socketIO().listen(http);
-
+const io = require("socket.io")(http, {
+  cors: {
+    origin: "https://banano-trivia.web.app/",
+    methods: ["GET", "POST"],
+  },
+});
+http.listen(process.env.SOCKETPORT || 5000, async () => {
+  console.log("Socket Open");
+});
 io.on("connection", (socket) => {
   onlinePlayers++;
 
