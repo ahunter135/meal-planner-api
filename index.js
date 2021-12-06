@@ -377,7 +377,7 @@ app.listen(process.env.PORT || 5000, async () => {
  */
 const io = require("socket.io")(http, {
   cors: {
-    origin: "https://banano-trivia.web.app/",
+    origin: "https://banano-faucett.herokuapp.com/",
     methods: ["GET", "POST"],
   },
 });
