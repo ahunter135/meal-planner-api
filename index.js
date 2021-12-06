@@ -401,16 +401,16 @@ io.on("connection", (socket) => {
   });
 
   socket.on("leave waiting room", async () => {
-    let user = _.find(lookingForLobby, (l) => {
+    let user = _.findIndex(lookingForLobby, (l) => {
       return socket.id === l.id;
     });
 
-    console.log(user);
+    lookingForLobby.splice(user, 1);
+
     db = await db;
     collection = db.collection("banano_trivia");
     let db_result = await find(user.address);
     if (db_result) {
-      console.log(db_result.value.accountBalance);
       await replace(user.address, {
         password: db_result.value.password,
         accountBalance: db_result.value.accountBalance + 0.2,
@@ -560,7 +560,8 @@ async function connectTwoUsers() {
     }
   }
 }
-
+/*
 setInterval(() => {
   connectTwoUsers();
 }, 24000);
+*/
