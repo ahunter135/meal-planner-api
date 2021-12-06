@@ -392,12 +392,30 @@ io.on("connection", (socket) => {
   });
 
   socket.on("looking for game", (id) => {
+    _.find(lookingForLobby, (l) => {
+      return id === l.address
+    })
     socket.join("waiting room");
     lookingForLobby.push({ id: socket.id, address: id });
     connectTwoUsers(id);
   });
 
   socket.on("leave waiting room", () => {
+    let user = _.find(lookingForLobby, (l) => {
+      return socket.id === l.id
+    });
+
+    console.log(user);
+    db = await db;
+    collection = db.collection("banano_trivia");
+    let db_result = await find(user.address);
+    if (db_result) {
+      console.log(db_result.value.accountBalance)
+      await replace(user.address, {
+        password: db_result.value.password,
+        accountBalance: db_result.value.accountBalance + 0.2,
+      });
+    }
     socket.leave("waiting room");
   });
 
@@ -513,6 +531,7 @@ async function connectTwoUsers(address) {
       let user2 = lookingForLobby.shift();
       var gameId = uuidv4();
 
+      if (user)
       let socketUser1 = io.sockets.sockets.get(user1.id);
       socketUser1.leave("waiting room");
 
