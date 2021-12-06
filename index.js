@@ -221,7 +221,7 @@ app.post("/createAccount", async function (req, res) {
   }
   insert(address, {
     password: password,
-    accountBalance: 1,
+    accountBalance: 0.4,
   });
 
   res.send("Account Created");
