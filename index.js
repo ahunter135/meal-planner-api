@@ -400,7 +400,7 @@ io.on("connection", (socket) => {
     connectTwoUsers(id);
   });
 
-  socket.on("leave waiting room", () => {
+  socket.on("leave waiting room", async () => {
     let user = _.find(lookingForLobby, (l) => {
       return socket.id === l.id
     });
