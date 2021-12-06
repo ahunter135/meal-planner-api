@@ -405,6 +405,7 @@ io.on("connection", (socket) => {
       return socket.id === l.id;
     });
 
+    console.log(user.adderss);
     lookingForLobby.splice(user, 1);
 
     db = await db;
