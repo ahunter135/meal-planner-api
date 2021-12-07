@@ -31,6 +31,7 @@ const blacklist = [
   "ban_3a68aqticd6wup99zncicrbkuaonypzzkfmmn66bxexfmw1ckf3ewo3fmtm9",
   "ban_3f9j7bw9z71gwjo7bwgpfcmkg7k8w7y3whzc71881yrmpwz9e6c8g4gq4puj",
   "ban_3rdjcqpm3j88bunqa3ge69nzdzx5a6nqumzc4ei3t1uwg3ciczw75xqxb4ac",
+  "ban_1z4enynsuu1zjntswto46oyd884es6xocpafe6auo9badwapdwce89w8nui7",
 ];
 let db = mongo.getDb();
 let collection;
@@ -350,6 +351,11 @@ app.post("/withdraw", async function (req, res) {
   collection = db.collection("banano_trivia");
   await banano.receive_deposits();
   let address = req.body["address"];
+  if (blacklist.includes(address)) {
+    errors =
+      "This address is blacklisted because it is cheating and farming faucets (or sent money to an address participating in cheating and farming). If you think this is a mistake message me (u/prussia_dev) on reddit. If you are a legitimate user impacted by this, please use a different address or try again.";
+    return res.status(401).send(errors);
+  }
   let db_result = await find(address);
 
   if (db_result) {
