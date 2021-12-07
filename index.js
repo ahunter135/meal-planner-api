@@ -33,6 +33,7 @@ const blacklist = [
   "ban_3rdjcqpm3j88bunqa3ge69nzdzx5a6nqumzc4ei3t1uwg3ciczw75xqxb4ac",
   "ban_1z4enynsuu1zjntswto46oyd884es6xocpafe6auo9badwapdwce89w8nui7",
 ];
+let depositedBlocks = [];
 let db = mongo.getDb();
 let collection;
 let withdrawalClosed = process.env.WITHDRAW;
@@ -255,24 +256,42 @@ app.get("/checkForDeposit", async function (req, res) {
   db = await db;
   collection = db.collection("banano_trivia");
   await banano.receive_deposits();
+
   let address = req.query.address;
   let account_history = await banano.get_account_history(process.env.BANADDR);
+  let dpb = await find("depositedBlocks");
+  let depositedBlocks = [];
+  if (dpb) {
+    depositedBlocks = dpb.value;
+  }
   let addressHistory = _.find(account_history.history, (a) => {
     let now = dayjs();
     let timestamp = dayjs.unix(a.local_timestamp);
+    let findIndex = _.findIndex(depositedBlocks, (b) => {
+      return a.hash === b;
+    });
+
     // Needs to check if block has already been used, if so; keep searching transactions
     return (
+      findIndex === -1 &&
       a.type === "receive" &&
       a.account === address &&
       now.diff(timestamp, "seconds") < 60
     );
   });
   if (addressHistory) {
+    if (!dpb) {
+      await insert("depositedBlocks", [addressHistory.hash]);
+    } else {
+      dpb.value.push(addressHistory.hash);
+      await replace("depositedBlocks", dpb.value);
+    }
     let db_result = await find(address);
     let accountBalance =
-      parseInt(db_result.value.accountBalance) +
-      parseInt(addressHistory.amount) / 100000000000000000000000000000;
+      parseFloat(db_result.value.accountBalance) +
+      parseFloat(addressHistory.amount) / 100000000000000000000000000000;
 
+    accountBalance = parseFloat(accountBalance).toFixed(2);
     await replace(address, {
       password: db_result.value.password,
       accountBalance: accountBalance,
