@@ -34,7 +34,7 @@ const blacklist = [
 ];
 let db = mongo.getDb();
 let collection;
-let offline = true;
+let withdrawalClosed = true;
 let onlinePlayers = 0;
 
 let lookingForLobby = [];
@@ -274,6 +274,9 @@ app.get("/checkForDeposit", async function (req, res) {
     await replace(address, {
       password: db_result.value.password,
       accountBalance: accountBalance,
+      lastWithdraw: db_result.value.lastWithdraw
+        ? db_result.value.lastWithdraw
+        : null,
     });
 
     res.send({
@@ -327,6 +330,9 @@ app.post("/deductBalance", async function (req, res) {
     await replace(address, {
       password: db_result.value.password,
       accountBalance: balance,
+      lastWithdraw: db_result.value.lastWithdraw
+        ? db_result.value.lastWithdraw
+        : null,
     });
 
     return res.send({
@@ -337,6 +343,8 @@ app.post("/deductBalance", async function (req, res) {
   }
 });
 app.post("/withdraw", async function (req, res) {
+  if (withdrawalClosed)
+    return res.status(400).send("Withdrawal is Currently Closed");
   db = await db;
   collection = db.collection("banano_trivia");
   await banano.receive_deposits();
@@ -347,6 +355,17 @@ app.post("/withdraw", async function (req, res) {
     if (db_result.value.accountBalance === 0)
       return res.status(400).send("Zero Balance");
 
+    if (db_result.value.lastWithdraw) {
+      let lastWithdraw = dayjs(db_result.value.lastWithdraw);
+      let now = dayjs();
+      let diff = now.diff(lastWithdraw, "minutes");
+
+      if (diff < 30) {
+        return res
+          .status(400)
+          .send("You can only withdraw once every 30 minutes");
+      }
+    }
     send = await banano.send_banano(address, db_result.value.accountBalance);
 
     if (!send) {
@@ -355,6 +374,7 @@ app.post("/withdraw", async function (req, res) {
       await replace(address, {
         password: db_result.value.password,
         accountBalance: 0,
+        lastWithdraw: dayjs().toISOString(),
       });
       res.status(200).send("Success");
     }
@@ -417,6 +437,9 @@ io.on("connection", (socket) => {
       await replace(user.address, {
         password: db_result.value.password,
         accountBalance: db_result.value.accountBalance + 0.2,
+        lastWithdraw: db_result.value.lastWithdraw
+          ? db_result.value.lastWithdraw
+          : null,
       });
     }
     socket.leave("waiting room");
@@ -466,7 +489,7 @@ Room.prototype.timerFunction = function () {
   if (this.timeRemaining === 0) {
     this.players[0].answered = false;
     this.players[1].answered = false;
-    this.timeRemaining = 20;
+    this.timeRemaining = 12;
     this.emitQuestion();
   }
   io.to(this.id).emit("counter", this.timeRemaining);
@@ -485,6 +508,9 @@ Room.prototype.emitQuestion = async function () {
         await replace(this.players[0].id, {
           password: db_result.value.password,
           accountBalance: db_result.value.accountBalance + 0.4,
+          lastWithdraw: db_result.value.lastWithdraw
+            ? db_result.value.lastWithdraw
+            : null,
         });
       }
     } else if (this.players[1].score > this.players[0].score) {
@@ -494,6 +520,9 @@ Room.prototype.emitQuestion = async function () {
         await replace(this.players[1].id, {
           password: db_result.value.password,
           accountBalance: db_result.value.accountBalance + 0.4,
+          lastWithdraw: db_result.value.lastWithdraw
+            ? db_result.value.lastWithdraw
+            : null,
         });
       }
     } else if (this.players[0].score === this.players[1].score) {
@@ -503,6 +532,9 @@ Room.prototype.emitQuestion = async function () {
         await replace(this.players[0].id, {
           password: db_result.value.password,
           accountBalance: db_result.value.accountBalance + 0.2,
+          lastWithdraw: db_result.value.lastWithdraw
+            ? db_result.value.lastWithdraw
+            : null,
         });
       }
       db_result = await find(this.players[1].id);
@@ -511,13 +543,12 @@ Room.prototype.emitQuestion = async function () {
         await replace(this.players[1].id, {
           password: db_result.value.password,
           accountBalance: db_result.value.accountBalance + 0.2,
+          lastWithdraw: db_result.value.lastWithdraw
+            ? db_result.value.lastWithdraw
+            : null,
         });
       }
     }
-
-    let lobbyIndex = _.findIndex(lobbies, (l) => {
-      return this.id === l.id;
-    });
 
     io.to(this.id).emit("game over", this.players);
   } else {
