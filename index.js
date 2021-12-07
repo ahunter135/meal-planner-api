@@ -345,7 +345,7 @@ app.post("/deductBalance", async function (req, res) {
   }
 });
 app.post("/withdraw", async function (req, res) {
-  if (withdrawalClosed)
+  if (process.env.WITHDRAW === "false")
     return res.status(400).send("Withdrawal is Currently Closed");
   db = await db;
   collection = db.collection("banano_trivia");
