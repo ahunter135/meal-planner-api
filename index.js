@@ -34,7 +34,7 @@ const blacklist = [
 ];
 let db = mongo.getDb();
 let collection;
-let withdrawalClosed = true;
+let withdrawalClosed = process.env.WITHDRAW;
 let onlinePlayers = 0;
 
 let lookingForLobby = [];
@@ -259,6 +259,7 @@ app.get("/checkForDeposit", async function (req, res) {
   let addressHistory = _.find(account_history.history, (a) => {
     let now = dayjs();
     let timestamp = dayjs.unix(a.local_timestamp);
+    // Needs to check if block has already been used, if so; keep searching transactions
     return (
       a.type === "receive" &&
       a.account === address &&
