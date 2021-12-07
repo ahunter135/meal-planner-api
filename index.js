@@ -578,9 +578,7 @@ async function connectTwoUsers() {
       socketUser1.join("game" + gameId);
       socketUser2.join("game" + gameId);
 
-      const response = await axios.get(
-        "https://opentdb.com/api.php?amount=5&difficulty=easy"
-      );
+      const response = await axios.get("https://opentdb.com/api.php?amount=7");
 
       let room = new Room(gameId, response.data.results);
       io.to(room.id).emit("joined room", {
