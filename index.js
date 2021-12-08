@@ -622,8 +622,7 @@ async function connectTwoUsers() {
     }
   }
 }
-/*
+
 setInterval(() => {
-  connectTwoUsers();
+  banano.receive_deposits();
 }, 24000);
-*/
