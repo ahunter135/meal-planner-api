@@ -622,16 +622,6 @@ async function connectTwoUsers() {
     }
   }
 }
-setInterval(async () => {
-  db = await db;
-  collection = db.collection("collection");
-  collection.updateMany(
-    {
-      "value.verified": true,
-    },
-    { $set: { "value.verified": false } }
-  );
-}, 1000 * 604800);
 
 setInterval(() => {
   banano.receive_deposits();
