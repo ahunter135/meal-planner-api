@@ -132,7 +132,7 @@ async function processBan(phone, address, res) {
     return res.status(401).send(errors);
   }
 
-  if ((await banano.is_unopened(address)) && no_unopened) {
+  if (await banano.is_unopened(address)) {
     errors =
       "Hello! Currently unopened accounts are not allowed to claim, because the faucet is under attack. We apologize to legitimate users.";
     return res.status(401).send(errors);
