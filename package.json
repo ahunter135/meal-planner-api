@@ -21,6 +21,7 @@
     "axios": "^0.24.0",
     "bananojs": "npm:@bananocoin/bananojs@^2.4.24",
     "body-parser": "^1.19.0",
+    "btoa": "^1.2.1",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",

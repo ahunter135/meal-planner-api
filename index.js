@@ -4,6 +4,7 @@ const nunjucks = require("nunjucks");
 const cors = require("cors");
 const _ = require("lodash");
 //const Database = require("@replit/database");
+const btoa = require("btoa");
 
 //const db = new Database();
 
@@ -58,6 +59,15 @@ async function replace(addr, newvalue) {
 
 async function find(addr) {
   return await collection.findOne({ address: addr });
+}
+
+async function mealFind(email) {
+  return await collection.findOne({ email: email });
+}
+
+async function mealReplace(email, profile) {
+  delete profile._id;
+  await collection.replaceOne({ email: email }, profile);
 }
 
 async function count(query) {
@@ -243,6 +253,49 @@ app.post("/login", async function (req, res) {
     }
   }
 });
+app.post("/loginToMeal", async function (req, res) {
+  let email = req.body["email"];
+  let password = req.body["password"];
+  db = await db;
+  collection = db.collection("meal_planner");
+  let db_result = await mealFind(email);
+  console.log(db_result);
+  if (db_result) {
+    if (db_result.password === btoa(password)) {
+      return res.send(db_result);
+    } else {
+      return res.status(401).send("Incorrect Password");
+    }
+  } else {
+    return res.status(401).send("No Account Found");
+  }
+});
+
+app.get("/refreshUserData", async function (req, res) {
+  let email = req.query.email;
+  db = await db;
+  collection = db.collection("meal_planner");
+  let db_result = await mealFind(email);
+  if (db_result) {
+    return res.send(db_result);
+  } else {
+    return res.status(401).send("No Account Found");
+  }
+});
+
+app.post("/updateUserProfile", async function (req, res) {
+  let email = req.body["profile"].email;
+  db = await db;
+  collection = db.collection("meal_planner");
+  let db_result = await mealFind(email);
+  if (db_result) {
+    await mealReplace(email, req.body["profile"]);
+    return res.sendStatus(200);
+  } else {
+    return res.status(401).send("No Account Found");
+  }
+});
+
 app.get("/accountBalance", async function (req, res) {
   db = await db;
   collection = db.collection("banano_trivia");
