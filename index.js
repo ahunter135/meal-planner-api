@@ -303,6 +303,26 @@ app.post("/deleteItem", async function (req, res) {
   }
 });
 
+app.post("/deleteWeeklyItem", async function (req, res) {
+  let email = req.body["email"];
+  let item = req.body["item"];
+  db = await db;
+  collection = db.collection("meal_planner");
+  let db_result = await mealFind(email);
+  if (db_result) {
+    let entries = db_result.mustHaves;
+    let foundEntry = _.findIndex(entries, (ent) => {
+      return ent.id === item;
+    });
+
+    db_result.mustHaves.splice(foundEntry, 1);
+    await mealReplace(email, db_result);
+    return res.send(db_result);
+  } else {
+    return res.status(401).send("No Account Found");
+  }
+});
+
 app.post("/updateUserProfile", async function (req, res) {
   let email = req.body["profile"].email;
   db = await db;
