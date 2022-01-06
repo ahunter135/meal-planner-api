@@ -295,7 +295,7 @@ app.post("/deleteItem", async function (req, res) {
       return ent.id === item;
     });
 
-    db_result.entries.splice(foundEntry, 1);
+    db_result.entries[foundEntry].deleted = true;
     await mealReplace(email, db_result);
     return res.send(db_result);
   } else {
