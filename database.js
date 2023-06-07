@@ -2,9 +2,7 @@ const mongo = require("mongodb");
 require("dotenv").config();
 
 let client = new mongo.MongoClient(
-  "mongodb+srv://admin:" +
-    encodeURIComponent(process.env.DBPASS) +
-    "@cluster0.0t6cr.mongodb.net/myFirstDatabase?retryWrites=true&w=majority",
+  process.env.DB_CONN_STRING,
   { useNewUrlParser: true, useUnifiedTopology: true }
 );
 
