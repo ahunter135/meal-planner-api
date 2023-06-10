@@ -1,6 +1,6 @@
-import { Environment } from "../environment";
+import { Environment } from "./environment";
 import * as mongoDb from "mongodb";
-import { Erno, ErnoCode } from "../types";
+import { Erno, ErnoCode } from "../api/v1/interfaces/types/module";
 
 export class Database {
     private static instance: Database;

@@ -1,18 +1,16 @@
 import { Request } from "express";
-import { User } from "../api/components/user/models";
-import { Entry } from "../api/components/entry/models";
-import { Recipe } from "../api/components/recipe/models";
-import { MustHave } from "../api/components/must-have/models";
 import { WithId, Document } from "mongodb";
+import { Singleton } from "../interfaces/module";
+import { Entry, MustHave, Recipe, User } from "../models/module";
 
 /**
     @description Class for mapping objects passed through requests to ts/js objects.
  */
-export class Mapper {
+export class Mapper extends Singleton {
 
     private static instance: Mapper;
 
-    private constructor() {}
+    private constructor() { super(); }
 
     public static getInstance(): Mapper {
         if (!Mapper.instance) {

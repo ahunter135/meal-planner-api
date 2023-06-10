@@ -1,15 +1,15 @@
-import { Database } from "../../../services/database";
-import { Mapper } from "../../../services/mapper";
-import { User } from "./models";
+import { Database } from "../../../config/database";
+import { Singleton } from "../interfaces/module";
+import { User } from "../models/module";
+import { Mapper } from "../services/module";
 
-
-export class UserRepository {
+export class UserRepository extends Singleton {
     private db: Database = Database.getInstance();
     private mapper: Mapper = Mapper.getInstance();
 
     private static instance: UserRepository;
 
-    private constructor() { }
+    private constructor() { super(); }
 
     public static getInstance(): UserRepository {
         if (!UserRepository.instance) {

@@ -1,5 +1,4 @@
-import { Environment } from './environment';
-import { Erno } from './types';
+import { Environment } from './config/environment';
 
 class Index {
     environment: Environment = Environment.getInstance();

@@ -6,6 +6,9 @@
  * Custom error definitions. I like custom errors
  */
 export enum ErnoCode {
+    // General error codes
+    METHOD_MUST_BE_OVERRIDEN,
+
     // Environment error codes
     ENVIRONMENT_NOT_FOUND,                 // Environment not defined in .env file
     DB_CONNECTION_STRING_NOT_FOUND,        // Database Connection String not defined in .env file

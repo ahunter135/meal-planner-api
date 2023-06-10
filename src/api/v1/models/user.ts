@@ -1,7 +1,6 @@
-import { Entry } from '../entry/models';
-import { MustHave } from '../must-have/models';
-import { Recipe } from '../recipe/models';
+
 import { ObjectId } from "mongodb";
+import { Entry, MustHave, Recipe } from "./module";
 
 /**
  * @description Type that reflects a user as defined in the current meal_planner docs 6/7/2023

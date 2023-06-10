@@ -1,5 +1,5 @@
 require("dotenv").config();
-import { Erno, ErnoCode } from "./types";
+import { Erno, ErnoCode } from "../api/v1/interfaces/types/module";
 
 // Type that specifies variables about the current environment
 export class Environment {
