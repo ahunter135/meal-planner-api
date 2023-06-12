@@ -1,3 +1,4 @@
-export type MustHave = {
-    
+import { ArrayEntry } from "./module";
+
+export type MustHave = ArrayEntry & {
 }

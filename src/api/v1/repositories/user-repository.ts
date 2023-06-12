@@ -47,4 +47,31 @@ export class UserRepository extends Singleton {
 
         return users;
     }
+
+    /**
+     * @description Replaces a user document with a new one.
+     * @param user User document to replace old one
+     * @param query Query for finding the original user document. Preferably contains email
+     * @returns True if replaces, false otherwise
+     */
+    async replaceUser(user: User, query: object): Promise<boolean> {
+        delete user._id;
+        const res = await this.db.collection.replaceOne(query, user);
+        return res.modifiedCount === 1;
+    }
+
+    /**
+     * @description Updates a user's document
+     * @param values Fields to be updated with new values
+     * @param query Query for finding the original user document. Preferably contains email
+     * @returns True if updates a document, false otherwise
+     */
+    async updateUser(values: User, query: object): Promise<boolean> {
+        const result = await this.db.collection.updateOne(query, {
+            $set: values,
+            $currentDate: { lastModified: true }
+        });
+
+        return result.modifiedCount == 1;
+    }
 }

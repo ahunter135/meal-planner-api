@@ -1,4 +1,3 @@
-//import { UserRepository } from "../../user/repository";
 import { Singleton } from "../interfaces/module";
 import { UserRepository } from "../repositories/user-repository";
 
