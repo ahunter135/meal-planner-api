@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { Singleton } from '../interfaces/module';
 import { Mapper } from '../services/module';
-import { isEmailValid } from "../helpers/module";
+import { isEmailFormatValid, isEmailValid } from "../helpers/module";
 import { UserService } from "../services/module";
 
 export class UserController extends Singleton {
@@ -19,7 +19,7 @@ export class UserController extends Singleton {
 
     public async getUser(req: Request, res: Response): Promise<Response> {
         let email = req.query.email;
-        if (!isEmailValid(email)) {
+        if (!isEmailFormatValid(email)) {
             return res.status(400).send("Email is either not provided or an invalid format");
         }
 
@@ -31,12 +31,22 @@ export class UserController extends Singleton {
     }
 
     public async createUser(req: Request, res: Response): Promise<Response> {
-        return res;
+        let email = req.body.email;
+        let password = req.body.password;
+        if (!isEmailValid(email)) {
+            return res.status(400).send("Email is not valid");
+        }
+
+        const serviceResponse = await this._userService.createUser(email, password);
+        // Send user if success, message otherwise
+        return res.status(serviceResponse.status).send(
+            serviceResponse.extras ? serviceResponse.extras : serviceResponse.message
+        );
     }
 
     public async putUser(req: Request, res: Response): Promise<Response> {
         let email = req.body["user"].email;
-        if (!isEmailValid(email)) {
+        if (!isEmailFormatValid(email)) {
             return res.status(400).send("Email is either not provided or an invalid format");
         }
 

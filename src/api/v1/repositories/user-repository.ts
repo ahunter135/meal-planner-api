@@ -1,4 +1,5 @@
 import { Database } from "../../../config/database";
+import { createBlankUser } from "../helpers/module";
 import { Singleton } from "../interfaces/module";
 import { User } from "../models/module";
 import { Mapper } from "../services/module";
@@ -46,6 +47,20 @@ export class UserRepository extends Singleton {
         }
 
         return users;
+    }
+
+    /**
+     * @description Creates a new user document in the database.
+     * @param email Users email
+     * @param password **ALREADY HASHED** Password
+     * @returns A user or undefined if the action fails
+     */
+    async createUser(email: string, password: string): Promise<User | undefined> {
+        const res = await this.db.collection.insertOne(
+            createBlankUser(email, password),
+        );
+
+        return this.getUser({ _id: res.insertedId });
     }
 
     /**

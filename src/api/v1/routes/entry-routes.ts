@@ -5,11 +5,11 @@ const router: Router = express.Router();
 const controller: EntryController = EntryController.getInstance();
 
 // Gets entry data
-router.get('/entry', async (req: Request, res: Response) => {
+router.get('/', async (req: Request, res: Response) => {
     
 });
 
-router.delete('/entry', async (req: Request, res: Response) => {
+router.delete('/', async (req: Request, res: Response) => {
     return await controller.deleteEntry(req, res);
 });
 

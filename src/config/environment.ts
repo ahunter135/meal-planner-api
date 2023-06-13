@@ -44,6 +44,18 @@ export class Environment {
         return dbCollectionName;
     }
 
+    public get ACCESS_TOKEN_SECRET(): string {
+        let accessTokenSecret = process.env.ACCESS_TOKEN_SECRET;
+        if (!accessTokenSecret) throw new Erno(ErnoCode.ACCESS_TOKEN_SECRET_NOT_FOUND);
+        return accessTokenSecret;
+    }
+
+    public get REFRESH_TOKEN_SECRET(): string {
+        let refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
+        if (!refreshTokenSecret) throw new Erno(ErnoCode.REFRESH_TOKEN_SECRET_NOT_FOUND);
+        return refreshTokenSecret;
+    }
+
     private environmentVarHelper(prod: string | undefined, dev: string | undefined): string | undefined {
         if (this.ENVIRONMENT == 'dev') return dev;
         else if (this.ENVIRONMENT == 'prod') return prod;

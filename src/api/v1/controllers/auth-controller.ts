@@ -28,4 +28,12 @@ export class AuthController extends Singleton {
             return res.status(401).send("Email and/or password does not match any account.")
         }
     }
+
+    async generateNewAccessToken(req: Request, res: Response): Promise<Response> {
+        const refreshToken: string | undefined | null = req.body.token;
+        if (!refreshToken) {
+            return res.status(401).send("No token provided");
+        }
+        const serviceResponse = await this._authService.generateNewAccessToken(refreshToken);
+    }
 }

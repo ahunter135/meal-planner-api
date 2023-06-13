@@ -1,9 +1,11 @@
 import express, { Router, Request, Response } from "express";
+import { AuthController } from "../controllers/module";
 
 const router: Router = express.Router();
+const controller: AuthController = AuthController.getInstance();
 
 router.post('/login', async (req: Request, res: Response) => {
-    //return await login(req, res);
+    return await controller.login(req, res);
 });
 
 export { router as default };

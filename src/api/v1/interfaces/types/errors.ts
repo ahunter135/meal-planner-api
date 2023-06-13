@@ -15,6 +15,8 @@ export enum ErnoCode {
     API_BASE_URL_NOT_FOUND,                // API URL not defined in .env file
     DB_NAME_NOT_FOUND,                     // Database name not defined in .env file
     DB_COLLECTION_NAME_NOT_FOUND,          // Database collection name not defined in .env
+    ACCESS_TOKEN_SECRET_NOT_FOUND,         // Access token secret not defined in .env
+    REFRESH_TOKEN_SECRET_NOT_FOUND,        // Refresh token secret not defined in .env
 
     // Database error codes
     CLIENT_NOT_CONNECTED,                  // Program did not connect to the client yet

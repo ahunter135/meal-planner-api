@@ -5,11 +5,11 @@ const router: Router = express.Router();
 const controller: MustHaveController = MustHaveController.getInstance();
 
 // Gets Must Have data
-router.get('/entry', async (req: Request, res: Response) => {
+router.get('/', async (req: Request, res: Response) => {
     
 });
 
-router.delete('/entry', async (req: Request, res: Response) => {
+router.delete('/', async (req: Request, res: Response) => {
     return await controller.deleteMustHave(req, res);
 });
 

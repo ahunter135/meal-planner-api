@@ -5,16 +5,17 @@ const router: Router = express.Router();
 const controller: UserController = UserController.getInstance();
 
 // Gets user data with email as query parameter
-router.get('/user', async (req: Request, res: Response) => {
+router.get('/', async (req: Request, res: Response) => {
     return await controller.getUser(req, res);
 });
 
 // Creates a new user
-router.post('/user', async (req: Request, res: Response) => {
+router.post('/', async (req: Request, res: Response) => {
     return await controller.createUser(req, res);
 });
 
-router.put('/user', async (req: Request, res: Response) => {
+// Replaces a user
+router.put('/', async (req: Request, res: Response) => {
     return await controller.putUser(req, res);
 });
 
