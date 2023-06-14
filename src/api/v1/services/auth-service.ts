@@ -40,12 +40,38 @@ export class AuthService extends Singleton {
         const refreshToken = this._jwtService.generateRefreshToken(email);
         const accessToken = this._jwtService.generateAccessToken(email);
 
+        const successFullyAddedRefreshToken = await this._refreshTokenRepository.addRefreshToken(refreshToken);
+
+        if (!successFullyAddedRefreshToken) {
+            return buildResponse("An error occurred logging the user in", 500, false, res);
+        }
+
         res = buildSuccessResponse(res);
         res.extras = {
             accessToken,
             refreshToken,
         };
         return res;
+    }
+
+    /**
+     * @description Logs the user out by invalidating their refresh token
+     * @param accessToken 
+     * @param refreshToken 
+     * @returns A dto object 
+     */
+    public async logout(refreshToken: string): Promise<ServiceResponseDto> {
+        let response = buildBaseResponse();
+
+        const isValidRefreshToken = this._refreshTokenRepository.doesRefreshTokenExist(refreshToken);
+        if (!isValidRefreshToken) {
+            return buildResponse("Refresh token invalid", 401, false, response);
+        }
+
+        await this._refreshTokenRepository.deleteRefreshToken(refreshToken);
+
+
+        return buildSuccessResponse(response, "Successfully logged out");
     }
 
     /**

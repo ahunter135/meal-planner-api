@@ -38,8 +38,14 @@ export class Environment {
         return dbName;
     }
 
-    public get DB_COLLECTION_NAME(): string {
-        let dbCollectionName = this.environmentVarHelper(process.env.DB_COLLECTION_NAME, process.env.DB_COLLECTION_NAME_DEV);
+    public get DB_USER_COLLECTION_NAME(): string {
+        let dbCollectionName = this.environmentVarHelper(process.env.DB_USER_COLLECTION_NAME, process.env.DB_USER_COLLECTION_NAME_DEV);
+        if (!dbCollectionName) throw new Erno(ErnoCode.DB_COLLECTION_NAME_NOT_FOUND);
+        return dbCollectionName;
+    }
+
+    public get DB_REFRESH_TOKEN_COLLECTION_NAME(): string {
+        let dbCollectionName = this.environmentVarHelper(process.env.DB_REFRESH_TOKEN_COLLECTION_NAME, process.env.DB_REFRESH_TOKEN_COLLECTION_NAME_DEV);
         if (!dbCollectionName) throw new Erno(ErnoCode.DB_COLLECTION_NAME_NOT_FOUND);
         return dbCollectionName;
     }

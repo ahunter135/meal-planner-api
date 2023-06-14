@@ -3,6 +3,7 @@ import { Environment } from './config/environment';
 import { UserRoutes, EntryRoutes, MustHaveRoutes, AuthRoutes } from "./api/v1/routes/module";
 import { API_BASE_ENDPOINT } from './config/constants';
 import { Express } from 'express';
+import { Database } from './config/database';
 
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
@@ -14,6 +15,7 @@ class Index extends Singleton {
 
     app: Express = express();
     environment: Environment = Environment.getInstance();
+    database: Database = Database.getInstance();
 
     public static getInstance(): Index {
         if (!Index.instance) Index.instance = new Index();
@@ -25,7 +27,9 @@ class Index extends Singleton {
     /**
      * @description Function responsible for starting the application.
      */
-    start(): void {
+    async start(): Promise<void> {
+        await this.database.initializeDatabase();
+
         this.setRoutes();
         this.setGlobalMiddleware();
 

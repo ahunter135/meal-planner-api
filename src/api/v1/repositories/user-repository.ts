@@ -25,7 +25,7 @@ export class UserRepository extends Singleton {
      * @returns A User object or undefined if no user was found
      */
     async getUser(query: object): Promise<User | undefined> {
-        const result = await this.db.collection.findOne(query);
+        const result = await this.db.userCollection.findOne(query);
 
         return this.mapper.mapDocumentToUser(result);
     }
@@ -38,7 +38,7 @@ export class UserRepository extends Singleton {
     async getUsers(query: object | undefined = undefined): Promise<User[]> {
         if (query === undefined) query = {};
 
-        const cursor = this.db.collection.find(query);
+        const cursor = this.db.userCollection.find(query);
         let users: User[] = [];
 
         while (await cursor.hasNext()) {
@@ -56,7 +56,7 @@ export class UserRepository extends Singleton {
      * @returns A user or undefined if the action fails
      */
     async createUser(email: string, password: string): Promise<User | undefined> {
-        const res = await this.db.collection.insertOne(
+        const res = await this.db.userCollection.insertOne(
             createBlankUser(email, password),
         );
 
@@ -71,7 +71,7 @@ export class UserRepository extends Singleton {
      */
     async replaceUser(user: User, query: object): Promise<boolean> {
         delete user._id;
-        const res = await this.db.collection.replaceOne(query, user);
+        const res = await this.db.userCollection.replaceOne(query, user);
         return res.modifiedCount === 1;
     }
 
@@ -82,7 +82,7 @@ export class UserRepository extends Singleton {
      * @returns True if updates a document, false otherwise
      */
     async updateUser(values: User, query: object): Promise<boolean> {
-        const result = await this.db.collection.updateOne(query, {
+        const result = await this.db.userCollection.updateOne(query, {
             $set: values,
             $currentDate: { lastModified: true }
         });

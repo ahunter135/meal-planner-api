@@ -1,7 +1,7 @@
 import { Request } from "express";
 import { WithId, Document } from "mongodb";
 import { Singleton } from "../interfaces/module";
-import { Entry, MustHave, Recipe, User } from "../models/module";
+import { Entry, MustHave, Recipe, RefreshTokens, User } from "../models/module";
 
 /**
     @description Class for mapping objects passed through requests to ts/js objects.
@@ -17,6 +17,22 @@ export class Mapper extends Singleton {
             Mapper.instance = new Mapper();
         }
         return Mapper.instance;
+    }
+
+    mapDocumentToRefreshTokens(doc: WithId<Document> | null): RefreshTokens | undefined {
+        if (!doc) return undefined;
+        return doc as RefreshTokens;
+    }
+
+    /**
+     * @description Maps a MongoDb document to a user object
+     * @param doc MongoDb document
+     * @returns A user object or undefined if no document is provided
+     * @todo Cast may not work directly so test it
+     */
+    mapDocumentToUser(doc: WithId<Document> | null): User | undefined {
+        if (!doc) return undefined;
+        return doc as User;
     }
 
     /**
@@ -35,17 +51,6 @@ export class Mapper extends Singleton {
             usedShareCode: req.body["user"]["usedShareCode"],
             recipes: req.body["user"]["recipes"],
         }
-    }
-
-    /**
-     * @description Maps a MongoDb document to a user object
-     * @param doc MongoDb document
-     * @returns A user object or undefined if no document is provided
-     * @todo Cast may not work directly so test it
-     */
-    mapDocumentToUser(doc: WithId<Document> | null): User | undefined {
-        if (!doc) return undefined;
-        return doc as User;
     }
 
     /**

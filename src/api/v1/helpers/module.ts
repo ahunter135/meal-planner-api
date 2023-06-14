@@ -6,4 +6,4 @@ export { deleteEntryFromUserArrayField, createBlankUser } from './user-helper';
 
 export { PasswordHelper } from './password-helper';
 
-export { setCookie, setCookies } from './cookie-helper';
+export { setCookie, setCookies, getTokensFromRequest } from './cookie-helper';

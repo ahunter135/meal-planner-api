@@ -8,6 +8,10 @@ router.post('/login', async (req: Request, res: Response) => {
     return await controller.login(req, res);
 });
 
+router.post('/logout', async (req: Request, res: Response) => {
+    return await controller.logout(req, res);
+});
+
 router.get('/token', async (req: Request, res: Response) => {
     return await controller.generateNewAccessToken(req, res);
 });

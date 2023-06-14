@@ -21,6 +21,9 @@ export enum ErnoCode {
 
     // Database error codes
     CLIENT_NOT_CONNECTED,                  // Program did not connect to the client yet
+
+    // Repository error codes
+    COLLECTION_OR_DOCUMENT_NOT_SETUP       // Document does not contain fields that it should
 }
 
 export class Erno {

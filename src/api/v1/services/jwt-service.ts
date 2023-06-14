@@ -31,16 +31,9 @@ export class JWTService extends Singleton {
      * @returns An email or undefined
      */
     verifyRefreshToken(token: string): string | undefined {
-        try {
-            const res = jwt.verify(token, this.environment.REFRESH_TOKEN_SECRET);
-            if (typeof res === 'string') {
-                return res;
-            } else {
-                return res.email;
-            }
-        } catch (e) {
-            return undefined;
-        }
+        // Also need to check repository to see if it exists
+        const tupleResponse = this.verifyToken(token, this.environment.REFRESH_TOKEN_SECRET);
+        return tupleResponse[0];
     }
 
     /**
@@ -50,6 +43,40 @@ export class JWTService extends Singleton {
      */
     generateAccessToken(email: string) {
         return jwt.sign({ email: email }, this.environment.ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
+    }
+
+    /**
+     * @description Verifies an access token
+     * @param token 
+     * @returns The email or undefined if the token is expired
+     * @throws An error if the token is invalid for a reason other than being expired
+     */
+    verifyAccessToken(token: string): string | undefined {
+        const tupleResponse = this.verifyToken(token, this.environment.ACCESS_TOKEN_SECRET);
+        const email: string | undefined = tupleResponse[0];
+        const err: any = tupleResponse[1];
+        if (err && err.name == "TokenExpiredError") {
+            return undefined;
+        } else if (!err && email) {
+            return email;
+        } else {
+            throw err;
+        }
+    }
+
+    private verifyToken(token: string, secret: string): [string | undefined, any] {
+        try {
+            const res = jwt.verify(token, secret);
+            let email = '';
+            if (typeof res === 'string') {
+                email = res;
+            } else {
+                email = res.email;
+            }
+            return [email, undefined];
+        } catch (e: any) {
+            return [undefined, e];
+        }
     }
 
 }

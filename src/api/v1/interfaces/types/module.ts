@@ -1,2 +1,2 @@
 export { Erno, ErnoCode } from './errors';
-export { ServiceResponseDto } from './dto';
+export { ServiceResponseDto, TokenFromRequestDto } from './dto';
