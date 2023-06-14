@@ -8,6 +8,7 @@
 export enum ErnoCode {
     // General error codes
     METHOD_MUST_BE_OVERRIDEN,
+    ARRAYS_MUST_HAVE_SAME_LENGTH,
 
     // Environment error codes
     ENVIRONMENT_NOT_FOUND,                 // Environment not defined in .env file

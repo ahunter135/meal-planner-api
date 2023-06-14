@@ -8,4 +8,8 @@ router.post('/login', async (req: Request, res: Response) => {
     return await controller.login(req, res);
 });
 
+router.get('/token', async (req: Request, res: Response) => {
+    return await controller.generateNewAccessToken(req, res);
+});
+
 export { router as default };

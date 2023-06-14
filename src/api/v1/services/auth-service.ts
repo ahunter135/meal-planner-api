@@ -22,16 +22,37 @@ export class AuthService extends Singleton {
         return AuthService.instance;
     }
 
-    public async login(email: string, password: string): Promise<boolean> {
+    /**
+     * @description Logs the user in and returns a refresh and access token
+     * @param email 
+     * @param password 
+     * @returns A Dto object with "accessToken" and "refreshToken" in the extras if successful
+     */
+    public async login(email: string, password: string): Promise<ServiceResponseDto> {
+        let res = buildBaseResponse();
+
         const user = await this._userRepository.getUser({ email: email });
-        if (user && user.password && (await this._passwordHelper.comparePasswords(user.password, password))) {
-            return true;
+        if (!(user && user.password && (await this._passwordHelper.comparePasswords(user.password, password)))) {
+            return buildResponse("Email or password is incorrect", 404, false, res);
         }
         // Need to add refresh token and access token here
+        // TODO: Remember to delete refresh token from cookies when user is logged out
+        const refreshToken = this._jwtService.generateRefreshToken(email);
+        const accessToken = this._jwtService.generateAccessToken(email);
 
-        return false;
+        res = buildSuccessResponse(res);
+        res.extras = {
+            accessToken,
+            refreshToken,
+        };
+        return res;
     }
 
+    /**
+     * @description Generates a new access token for the user
+     * @param refreshToken 
+     * @returns 
+     */
     async generateNewAccessToken(refreshToken: string): Promise<ServiceResponseDto> {
         let response = buildBaseResponse();
 
@@ -47,7 +68,7 @@ export class AuthService extends Singleton {
         }
 
         const newAccessToken = this._jwtService.generateAccessToken(email);
-        response = buildSuccessResponse(response, "");
+        response = buildSuccessResponse(response);
         response.extras = newAccessToken;
         return response;
     }

@@ -5,3 +5,5 @@ export { buildNotFoundResponse, buildBaseResponse, buildSuccessResponse, buildRe
 export { deleteEntryFromUserArrayField, createBlankUser } from './user-helper';
 
 export { PasswordHelper } from './password-helper';
+
+export { setCookie, setCookies } from './cookie-helper';
