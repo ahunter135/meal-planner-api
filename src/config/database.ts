@@ -49,6 +49,7 @@ export class Database extends Singleton {
     }
 
     async initializeDatabase() {
+        console.log("Initializing database connection.");
         this.client = new mongoDb.MongoClient(this._environment.DB_CONN_STRING);
 
         await this.client.connect();

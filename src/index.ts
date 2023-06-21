@@ -28,13 +28,14 @@ class Index extends Singleton {
      * @description Function responsible for starting the application.
      */
     async start(): Promise<void> {
-        await this.database.initializeDatabase();
+        try { await this.database.initializeDatabase(); }
+        catch(e) { console.error(e, "Error initializing database."); return; }
 
         this.setRoutes();
         this.setGlobalMiddleware();
 
         try {
-            this.app.listen(4141, () => {
+            this.app.listen(this.environment.API_PORT, () => {
                 console.log("Server started and listening on port 4141");
             });
         } catch (e) {
@@ -51,6 +52,7 @@ class Index extends Singleton {
             this.app.use("/entry", EntryRoutes);
             this.app.use("/mustHave", MustHaveRoutes);
             this.app.use("/auth", AuthRoutes);
+            console.log("Routes setup successfully");
         } catch (e) {
             console.error(e, "Error setting routes");
             throw e;
@@ -63,9 +65,12 @@ class Index extends Singleton {
             this.app.use(bodyParser.urlencoded({ extended: true }));
             this.app.use(bodyParser.json());
             this.app.use(cookieParser());
+            console.log("Global middlewares setup successfully");
         } catch (e) {
             console.error(e, "Error setting global middleware");
             throw e;
         }
     }
 }
+
+Index.getInstance().start();

@@ -32,6 +32,12 @@ export class Environment {
         return apiBaseUrl;
     }
 
+    public get API_PORT(): number {
+        let apiPort = this.environmentVarHelper(process.env.API_PORT, process.env.API_PORT_DEV);
+        if (!apiPort) throw new Erno(ErnoCode.API_PORT_NOT_FOUND);
+        return parseInt(apiPort);
+    }
+
     public get DB_NAME(): string {
         let dbName = this.environmentVarHelper(process.env.DB_NAME, process.env.DB_NAME_DEV);
         if (!dbName) throw new Erno(ErnoCode.DB_NAME_NOT_FOUND);
